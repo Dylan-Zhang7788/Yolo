@@ -23,7 +23,7 @@ stop_count=0
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 file_root_train = '/home/xcy/zhangdi_ws/seg/VOC2012/JPEGImages/'
 file_root_val='/home/xcy/zhangdi_ws/seg/VOC2012/JPEGImages/'
-batch_size = 10
+batch_size = 16
 learning_rate = 0.001
 num_epochs = 100
 
@@ -44,7 +44,7 @@ val_dataset = yoloDataset(
         transforms.ToTensor()])
 val_loader = DataLoader(
     val_dataset,
-    batch_size=10,
+    batch_size=16,
     shuffle=False,
     num_workers=0)
 
@@ -135,8 +135,8 @@ for epoch in range(num_epochs):
         torch.save(net.state_dict(), 'best.pth')
     else:
         stop_count+=1
-        print('EarlyStopping counter:',stop_count, 'out of 5')
-        if stop_count>5: break
+        print('EarlyStopping counter:',stop_count, 'out of 8')
+        if stop_count>8: break
 
 torch.save(net.state_dict(), 'yolo.pth')
 

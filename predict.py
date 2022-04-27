@@ -1,3 +1,4 @@
+from urllib.request import proxy_bypass
 import torch
 from torch.autograd import Variable
 
@@ -7,16 +8,40 @@ import cv2
 import numpy as np
 
 VOC_CLASSES = (    # always index 0
-    'hand')
+    'aeroplane', 'bicycle', 'bird', 'boat',
+    'bottle', 'bus', 'car', 'cat', 'chair',
+    'cow', 'diningtable', 'dog', 'horse',
+    'motorbike', 'person', 'pottedplant',
+    'sheep', 'sofa', 'train', 'tvmonitor')
 
-Color = [[256, 0, 0]]
+Color = [[0, 0, 0],
+         [128, 0, 0],
+         [0, 128, 0],
+         [128, 128, 0],
+         [0, 0, 128],
+         [128, 0, 128],
+         [0, 128, 128],
+         [128, 128, 128],
+         [64, 0, 0],
+         [192, 0, 0],
+         [64, 128, 0],
+         [192, 128, 0],
+         [64, 0, 128],
+         [192, 0, 128],
+         [64, 128, 128],
+         [192, 128, 128],
+         [0, 64, 0],
+         [128, 64, 0],
+         [0, 192, 0],
+         [128, 192, 0],
+         [0, 64, 128]]
+
 
 def decoder(pred):  # 在前面数据提取和加载部分我们有写过编码部分，是为了方便网络的训练，但是在最后的预测阶段我们需要框出图中的物体因此需要再转换成bbox[x1,y1,x2,y2]的格式
     '''
     pred (tensor) 1x7x7x30
     return (tensor) box[[x1,y1,x2,y2]] label[...]
     '''
-    print(pred[0,4,4,:])
     grid_num = 7
     boxes = []
     cls_indexs = []
@@ -24,15 +49,13 @@ def decoder(pred):  # 在前面数据提取和加载部分我们有写过编码�
     cell_size = 1. / grid_num
     pred = pred.data
     pred = pred.squeeze(0)  # 7x7x30
-    contain1 = pred[:, :, 4].unsqueeze(2) # 每一个方框的第一个置信度 
-    contain2 = pred[:, :, 9].unsqueeze(2) # 每一个方框的第二个置信度
-    contain = torch.cat((contain1, contain2), 2) # 两个置信度连在一起
+    contain1 = pred[:, :, 4].unsqueeze(2)
+    contain2 = pred[:, :, 9].unsqueeze(2)
+    contain = torch.cat((contain1, contain2), 2)
     mask1 = contain > 0.1  # 大于阈值
     # we always select the best contain_prob what ever it>0.9
-    mask2 = (contain == contain.max()) # 是不是写错了？？？？
-    # print(mask2)
+    mask2 = (contain == contain.max())
     mask = (mask1 + mask2).gt(0)
-    print(mask)
     # min_score,min_index = torch.min(contain,2) #每个cell只选最大概率的那个预测框
     for i in range(grid_num):
         for j in range(grid_num):
@@ -40,7 +63,6 @@ def decoder(pred):  # 在前面数据提取和加载部分我们有写过编码�
                 # index = min_index[i,j]
                 # mask[i,j,index] = 0
                 if mask[i, j, b] == 1:
-                    # print(i,j,b)
                     box = pred[i, j, b * 5:b * 5 + 4]
                     contain_prob = torch.FloatTensor([pred[i, j, b * 5 + 4]])
                     # cell左上角  up left of cell
@@ -56,6 +78,7 @@ def decoder(pred):  # 在前面数据提取和加载部分我们有写过编码�
                         boxes.append(box_xy.view(1, 4))
                         cls_indexs.append(cls_index)
                         probs.append(contain_prob * max_prob)
+                        
     if len(boxes) == 0:
         boxes = torch.zeros((1, 4))
         probs = torch.zeros(1)
@@ -63,7 +86,7 @@ def decoder(pred):  # 在前面数据提取和加载部分我们有写过编码�
     else:
         boxes = torch.cat(boxes, 0)  # (n,4)
         probs = torch.cat(probs, 0)  # (n,)
-        cls_indexs = torch.cat(cls_indexs, 0)  # (n,)
+        cls_indexs = torch.stack(cls_indexs, 0)  # (n,)
     keep = nms(boxes, probs)
     return boxes[keep], cls_indexs[keep], probs[keep]
 
@@ -82,6 +105,7 @@ def nms(bboxes, scores, threshold=0.5):
     _, order = scores.sort(0, descending=True)
     keep = []
     while order.numel() > 0:
+        
         i = order[0]
         keep.append(i)
 
@@ -95,17 +119,20 @@ def nms(bboxes, scores, threshold=0.5):
 
         w = (xx2 - xx1).clamp(min=0)
         h = (yy2 - yy1).clamp(min=0)
-        inter = w * h
-
-        ovr = inter / (areas[i] + areas[order[1:]] - inter)
-        ids = (ovr <= threshold).nonzero().squeeze()
+        inter = w * h      # 其他框与得分最高的框的相交区域的面积
+        ovr = inter / (areas[i] + areas[order[1:]] - inter) # 相交区域面积/(得分最高区域+其他区域面积-相交的面积)
+                                                            # 也就相当于： 相交面积/总面积
+        ids = (ovr <= threshold).nonzero().squeeze() # 小于0.5 且不是0的地方的索引
         if ids.numel() == 0:
             break
-        order = order[ids + 1]
+        order = order[ids+1]
+        if ids.numel()==1:
+            order=order.unsqueeze(0)
     return torch.LongTensor(keep)
 #
 # start predict one image
 #
+
 
 def predict_gpu(model, image_name, root_path=''):
 
@@ -126,7 +153,6 @@ def predict_gpu(model, image_name, root_path=''):
     pred = model(img)  # 1x7x7x30
     pred = pred.cpu()
     boxes, cls_indexs, probs = decoder(pred)
-    print(boxes, cls_indexs, probs)
 
     for i, box in enumerate(boxes):
         x1 = int(box[0] * w)
@@ -148,7 +174,7 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load('best.pth'))
     model.eval()
     model.cuda()
-    image_name = '3.jpg'
+    image_name = '4.jpg'
     image = cv2.imread(image_name)
     print('predicting...')
     result = predict_gpu(model, image_name)
@@ -181,5 +207,4 @@ if __name__ == '__main__':
             1,
             8)
 
-    cv2.imshow('result.jpg', image)
-    cv2.waitKey(0)
+    cv2.imwrite('result.jpg', image)
