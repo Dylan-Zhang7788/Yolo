@@ -9,7 +9,9 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 import torch
 import hiddenlayer as hl
+import os
 
+os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 
 history1 = hl.History()
 history2=hl.History()

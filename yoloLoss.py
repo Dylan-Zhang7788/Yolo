@@ -89,7 +89,7 @@ class yoloLoss(nn.Module):
         nooobj_loss = F.mse_loss(
             noo_pred_c,
             noo_target_c,
-            size_average=False)  # 对应的位置做均方误差
+            reduction='sum')  # 对应的位置做均方误差
 
         # compute contain obj loss
         coo_response_mask = ByteTensor(box_target.size()).cuda()
@@ -132,21 +132,21 @@ class yoloLoss(nn.Module):
         box_target_response = box_target[coo_response_mask].view(-1, 5)
 
         contain_loss = F.mse_loss(
-            box_pred_response[:, 4], box_target_response_iou[:, 4], size_average=False)
-        loc_loss = F.mse_loss(box_pred_response[:, :2], box_target_response[:, :2], size_average=False) + F.mse_loss(
-            torch.sqrt(box_pred_response[:, 2:4]), torch.sqrt(box_target_response[:, 2:4]), size_average=False)
+            box_pred_response[:, 4], box_target_response_iou[:, 4], reduction='sum')
+        loc_loss = F.mse_loss(box_pred_response[:, :2], box_target_response[:, :2], reduction='sum') + F.mse_loss(
+            torch.sqrt(box_pred_response[:, 2:4]), torch.sqrt(box_target_response[:, 2:4]), reduction='sum')
         # 2.not response loss iou不符合的
         box_pred_not_response = box_pred[coo_not_response_mask].view(-1, 5)
         box_target_not_response = box_target[coo_not_response_mask].view(-1, 5)
         box_target_not_response[:, 4] = 0
-        # not_contain_loss = F.mse_loss(box_pred_response[:,4],box_target_response[:,4],size_average=False)
+        # not_contain_loss = F.mse_loss(box_pred_response[:,4],box_target_response[:,4],reduction='sum')
 
         # I believe this bug is simply a typo
         not_contain_loss = F.mse_loss(
-            box_pred_not_response[:, 4], box_target_not_response[:, 4], size_average=False)
+            box_pred_not_response[:, 4], box_target_not_response[:, 4], reduction='sum')
 
         # 3.class loss
-        class_loss = F.mse_loss(class_pred, class_target, size_average=False)
+        class_loss = F.mse_loss(class_pred, class_target, reduction='sum')
 
         return (self.l_coord * loc_loss + 2 * contain_loss +
                 not_contain_loss + self.l_noobj * nooobj_loss + class_loss) / N
