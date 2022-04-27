@@ -1,0 +1,9 @@
+__pycache__/
+.idea/
+VOC2012/
+VOC2007/
+dataset/
+train_dataset/
+beifen/
+best.pth
+yolo.pth
