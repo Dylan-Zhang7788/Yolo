@@ -39,7 +39,7 @@ txt_file = open('./dataset/hand_dataset_1.txt', 'w')
 # lines = [x[:-1] for x in lines]
 # print(lines)
 
-Annotations = '/home/xcy/my_code/seg/dataset/Annotations/'
+Annotations = '/home/xcy/zhangdi_ws/seg/dataset/Annotations/'
 xml_files = os.listdir(Annotations)
 
 count = 0
@@ -49,7 +49,7 @@ for xml_file in xml_files:
     #     # print(xml_file.split('.')[0])
     #     continue
     image_path = xml_file.split('.')[0] + '.jpg'
-    img=cv2.imread(os.path.join('/home/xcy/my_code/seg/VOC2007/JPEGImages',image_path))
+    img=cv2.imread(os.path.join('/home/xcy/zhangdi_ws/seg/VOC2007/JPEGImages',image_path))
     print(count)
     results = parse_rec(Annotations + xml_file)
     if len(results) == 0:
@@ -77,9 +77,9 @@ for xml_file in xml_files:
               
     # if key==97:
         # print("saved")
-        # shutil.copy(Annotations + xml_file,'/home/xcy/my_code/seg/dataset/Annotations/'+ xml_file)
-        # cv2.imwrite(os.path.join('/home/xcy/my_code/seg/dataset/img/',xml_file.split('.')[0]+'k.jpg'),img)
-    shutil.copy(os.path.join('/home/xcy/my_code/seg/VOC2007/JPEGImages',image_path),'/home/xcy/my_code/seg/dataset/img/'+ image_path)
+        # shutil.copy(Annotations + xml_file,'/home/xcy/zhangdi_ws/seg/dataset/Annotations/'+ xml_file)
+        # cv2.imwrite(os.path.join('/home/xcy/zhangdi_ws/seg/dataset/img/',xml_file.split('.')[0]+'k.jpg'),img)
+    shutil.copy(os.path.join('/home/xcy/zhangdi_ws/seg/VOC2007/JPEGImages',image_path),'/home/xcy/zhangdi_ws/seg/dataset/img/'+ image_path)
     # if count == 10:
     #    break
 txt_file.close()

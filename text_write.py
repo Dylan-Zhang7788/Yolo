@@ -32,13 +32,13 @@ def parse_rec(filename):
     return objects
 
 
-txt_file = open('/home/xcy/my_code/seg/voc2012test.txt', 'w')
+txt_file = open('/home/xcy/zhangdi_ws/seg/voc2012test.txt', 'w')
 # test_file = open('voc07testimg.txt', 'r')
 # lines = test_file.readlines()
 # lines = [x[:-1] for x in lines]
 # print(lines)
 
-Annotations = '/home/xcy/my_code/seg/VOC2012/Annotations/'
+Annotations = '/home/xcy/zhangdi_ws/seg/VOC2012/Annotations/'
 xml_files = os.listdir(Annotations)
 
 count = 0
