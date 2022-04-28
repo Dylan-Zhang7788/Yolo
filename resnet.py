@@ -152,12 +152,12 @@ class ResNet(nn.Module):
         # self.fc = nn.Linear(512 * block.expansion, num_classes)
         self.conv_end = nn.Conv2d(
             256,
-            30,        # 改了 原来是30
+            11,        # 改了 原来是30
             kernel_size=3,
             stride=1,
             padding=1,
             bias=False)
-        self.bn_end = nn.BatchNorm2d(30) # 改了，原来是30
+        self.bn_end = nn.BatchNorm2d(11) # 改了，原来是30
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels

@@ -21,15 +21,15 @@ canvas2 = hl.Canvas()
 stop_count=0
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-file_root_train = '/home/xcy/zhangdi_ws/seg/VOC2012/JPEGImages/'
-file_root_val='/home/xcy/zhangdi_ws/seg/VOC2012/JPEGImages/'
-batch_size = 16
+file_root_train = '/home/xcy/zhangdi_ws/seg/train_dataset/'
+file_root_val='/home/xcy/zhangdi_ws/seg/train_dataset/'
+batch_size = 24
 learning_rate = 0.001
 num_epochs = 100
 
 train_dataset = yoloDataset(
     root=file_root_train, list_file=
-        '/home/xcy/zhangdi_ws/seg/voc2012test.txt', train=True, transform=[
+        '/home/xcy/zhangdi_ws/seg/train_dataset.txt', train=True, transform=[
             transforms.ToTensor()])
 train_loader = DataLoader(
     train_dataset,
@@ -38,13 +38,13 @@ train_loader = DataLoader(
     num_workers=0)
 val_dataset = yoloDataset(
     root=file_root_val,
-    list_file='/home/xcy/zhangdi_ws/seg/voc2012test.txt',
+    list_file='/home/xcy/zhangdi_ws/seg/train_dataset.txt',
     train=False,
     transform=[
         transforms.ToTensor()])
 val_loader = DataLoader(
     val_dataset,
-    batch_size=16,
+    batch_size=24,
     shuffle=False,
     num_workers=0)
 
@@ -100,9 +100,9 @@ time=0
 for epoch in range(num_epochs):
     net.train()
     if epoch == 30:
-        learning_rate = 0.0001
+        learning_rate = 0.0005
     if epoch == 40:
-        learning_rate = 0.00001
+        learning_rate = 0.0001
     for param_group in optimizer.param_groups:
         param_group['lr'] = learning_rate
     print('\n\nStarting epoch %d / %d' % (epoch + 1, num_epochs))

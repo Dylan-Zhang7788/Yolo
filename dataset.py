@@ -21,7 +21,7 @@ class yoloDataset(data.Dataset):
         self.labels = []
         self.S = 7  # grid number 7*7 normally
         self.B = 2  # bounding box number in each grid
-        self.C = 20 # how many classes
+        self.C = 1 # how many classes 改了
         self.mean = (123, 117, 104)  # RGB
 
         # if isinstance(list_file, list):
@@ -88,7 +88,7 @@ class yoloDataset(data.Dataset):
         return 7x7x30
         '''
         grid_num = 7
-        target = torch.zeros((grid_num, grid_num, 30))     # 这里改了 原来是30
+        target = torch.zeros((grid_num, grid_num, 11))     # 这里改了 原来是30
         cell_size = 1. / grid_num                         # 每个格子的大小
 
         # 右下坐标        左上坐标

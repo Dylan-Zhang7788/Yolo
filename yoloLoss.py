@@ -69,16 +69,16 @@ class yoloLoss(nn.Module):
         # 得到不含物体的坐标等信息
         noo_mask = noo_mask.unsqueeze(-1).expand_as(target_tensor)
 
-        coo_pred = pred_tensor[coo_mask].view(-1, 30)
+        coo_pred = pred_tensor[coo_mask].view(-1, 11)
         box_pred = coo_pred[:, :10].contiguous().view(-1, 5)  # box[x1,y1,w1,h1,c1]
         class_pred = coo_pred[:, 10:]  # [x2,y2,w2,h2,c2]
 
-        coo_target = target_tensor[coo_mask].view(-1, 30)
+        coo_target = target_tensor[coo_mask].view(-1, 11)
         box_target = coo_target[:, :10].contiguous().view(-1, 5)
         class_target = coo_target[:, 10:]
         # compute not contain obj loss
-        noo_pred = pred_tensor[noo_mask].view(-1, 30)
-        noo_target = target_tensor[noo_mask].view(-1, 30)
+        noo_pred = pred_tensor[noo_mask].view(-1, 11)
+        noo_target = target_tensor[noo_mask].view(-1, 11)
         noo_pred_mask = ByteTensor(noo_pred.size()).cuda()
         noo_pred_mask.zero_()
         noo_pred_mask[:, 4] = 1
